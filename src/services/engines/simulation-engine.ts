@@ -1,5 +1,5 @@
 import { eventBus } from '../../events/event-bus';
-import { dispatchToAllStores } from '../../store/ui-store';
+import { TimeAuthority } from '../time-authority';
 import { useMarketStore } from '../../store/market-store';
 import { usePortfolioStore } from '../../store/portfolio-store';
 import { useRiskStore } from '../../store/risk-store';
@@ -39,7 +39,7 @@ class SimulationEngine {
     }
 
     const activeSymbol = useMarketStore.getState().activeSymbol;
-    const timestamp = Date.now();
+    const timestamp = TimeAuthority.now();
 
     // 1. Update prices with GBM (Geometric Brownian Motion) random walk
     Object.keys(this.prices).forEach((sym) => {
@@ -68,7 +68,6 @@ class SimulationEngine {
         },
       };
       eventBus.publish(tickEvent);
-      dispatchToAllStores(tickEvent);
     });
 
     // 2. Drive portfolio unrealized PnL updates
@@ -88,13 +87,13 @@ class SimulationEngine {
 
       const nextNetAssetValue = portfolioStore.summary.cashBalance + totalUnrealizedPnL;
       
-      dispatchToAllStores({
+      eventBus.publish({
         metadata: { version: 1, eventId: crypto.randomUUID(), correlationId: crypto.randomUUID(), timestamp },
         type: 'portfolio:positions_updated',
         payload: nextPositions,
       });
 
-      dispatchToAllStores({
+      eventBus.publish({
         metadata: { version: 1, eventId: crypto.randomUUID(), correlationId: crypto.randomUUID(), timestamp },
         type: 'portfolio:summary_updated',
         payload: {
@@ -106,7 +105,7 @@ class SimulationEngine {
       });
 
       // Update Risk Metrics
-      dispatchToAllStores({
+      eventBus.publish({
         metadata: { version: 1, eventId: crypto.randomUUID(), correlationId: crypto.randomUUID(), timestamp },
         type: 'risk:metrics_updated',
         payload: {
@@ -126,7 +125,7 @@ class SimulationEngine {
       const direction = Math.random() > 0.6 ? 'BUY' : Math.random() > 0.5 ? 'SELL' : 'HOLD';
       const confidence = Math.floor(Math.random() * 40) + 50;
 
-      dispatchToAllStores({
+      eventBus.publish({
         metadata: { version: 1, eventId: crypto.randomUUID(), correlationId: crypto.randomUUID(), timestamp },
         type: 'signal:generated',
         payload: {
@@ -144,7 +143,7 @@ class SimulationEngine {
     }
 
     // 4. Update System Health Subsystem telemetry
-    dispatchToAllStores({
+    eventBus.publish({
       metadata: { version: 1, eventId: crypto.randomUUID(), correlationId: crypto.randomUUID(), timestamp },
       type: 'health:metrics_updated',
       payload: {

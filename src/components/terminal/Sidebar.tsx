@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useUIStore } from '../../store/ui-store';
+import { TimeAuthority } from '../../services/time-authority';
 
 const navItems = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, to: '/' },
@@ -43,7 +44,7 @@ export function Sidebar() {
         version: 1,
         eventId: crypto.randomUUID(),
         correlationId: crypto.randomUUID(),
-        timestamp: Date.now(),
+        timestamp: TimeAuthority.now(),
       },
       type: 'ui:tab_changed',
       payload: { tab: tabId },

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { Position, Order, PortfolioSummary } from '../types/portfolio';
 import { IEvent } from '../events/types';
+import { eventBus } from '../events/event-bus';
 
 interface PortfolioState {
   summary: PortfolioSummary;
@@ -48,3 +49,5 @@ export const usePortfolioStore = create<PortfolioState>((set) => ({
     }
   },
 }));
+
+eventBus.subscribe('portfolio:*', (event) => usePortfolioStore.getState().dispatch(event));

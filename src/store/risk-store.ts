@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { IEvent } from '../events/types';
+import { eventBus } from '../events/event-bus';
 
 interface RiskMetrics {
   exposure: number;
@@ -48,3 +49,5 @@ export const useRiskStore = create<RiskState>((set) => ({
     }
   },
 }));
+
+eventBus.subscribe('risk:*', (event) => useRiskStore.getState().dispatch(event));

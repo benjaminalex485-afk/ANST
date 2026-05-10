@@ -12,7 +12,9 @@ import {
   Search,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
-import { useUIStore, dispatchToAllStores } from '../../store/ui-store';
+import { useUIStore } from '../../store/ui-store';
+import { eventBus } from '../../events/event-bus';
+import { TimeAuthority } from '../../services/time-authority';
 
 interface PaletteItem {
   id: string;
@@ -36,7 +38,7 @@ export function CommandPalette() {
         version: 1,
         eventId: crypto.randomUUID(),
         correlationId: crypto.randomUUID(),
-        timestamp: Date.now(),
+        timestamp: TimeAuthority.now(),
       },
       type: 'ui:palette_set',
       payload: { open: false },
@@ -44,12 +46,12 @@ export function CommandPalette() {
   };
 
   const selectTab = (tabId: string) => {
-    dispatchToAllStores({
+    eventBus.publish({
       metadata: {
         version: 1,
         eventId: crypto.randomUUID(),
         correlationId: crypto.randomUUID(),
-        timestamp: Date.now(),
+        timestamp: TimeAuthority.now(),
       },
       type: 'ui:tab_changed',
       payload: { tab: tabId },
@@ -58,12 +60,12 @@ export function CommandPalette() {
   };
 
   const selectSymbol = (sym: string) => {
-    dispatchToAllStores({
+    eventBus.publish({
       metadata: {
         version: 1,
         eventId: crypto.randomUUID(),
         correlationId: crypto.randomUUID(),
-        timestamp: Date.now(),
+        timestamp: TimeAuthority.now(),
       },
       type: 'market:symbol_changed',
       payload: { symbol: sym },
@@ -73,12 +75,12 @@ export function CommandPalette() {
 
   const triggerKillSwitch = () => {
     if (confirm('CRITICAL ACTION: Trigger emergency kill switch?')) {
-      dispatchToAllStores({
+      eventBus.publish({
         metadata: {
           version: 1,
           eventId: crypto.randomUUID(),
           correlationId: crypto.randomUUID(),
-          timestamp: Date.now(),
+          timestamp: TimeAuthority.now(),
         },
         type: 'risk:kill_switch_triggered',
         payload: {},
@@ -126,7 +128,7 @@ export function CommandPalette() {
             version: 1,
             eventId: crypto.randomUUID(),
             correlationId: crypto.randomUUID(),
-            timestamp: Date.now(),
+            timestamp: TimeAuthority.now(),
           },
           type: 'ui:palette_toggled',
           payload: {},

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { AISignal, MarketRegime } from '../types/signal';
 import { IEvent } from '../events/types';
+import { eventBus } from '../events/event-bus';
 
 interface SignalState {
   signals: AISignal[];
@@ -28,3 +29,5 @@ export const useSignalStore = create<SignalState>((set) => ({
     }
   },
 }));
+
+eventBus.subscribe('signal:*', (event) => useSignalStore.getState().dispatch(event));

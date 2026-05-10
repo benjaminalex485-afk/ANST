@@ -3,7 +3,9 @@ import { cn } from '../../lib/utils';
 import { StatusBadge } from './StatusBadge';
 import { useMarketStore } from '../../store/market-store';
 import { useHealthStore } from '../../store/health-store';
-import { useUIStore, dispatchToAllStores } from '../../store/ui-store';
+import { useUIStore } from '../../store/ui-store';
+import { eventBus } from '../../events/event-bus';
+import { TimeAuthority } from '../../services/time-authority';
 import { useRuntimeStore } from '../../store/runtime-store';
 
 const symbols = ['BTC/USD', 'ETH/USD', 'SOL/USD', 'AAPL', 'NVDA', 'ES1!'];
@@ -20,12 +22,12 @@ export function Topbar() {
   const runtimeState = useRuntimeStore((state) => state.state);
 
   const handleSymbolChange = (symbol: string) => {
-    dispatchToAllStores({
+    eventBus.publish({
       metadata: {
         version: 1,
         eventId: crypto.randomUUID(),
         correlationId: crypto.randomUUID(),
-        timestamp: Date.now(),
+        timestamp: TimeAuthority.now(),
       },
       type: 'market:symbol_changed',
       payload: { symbol },
@@ -33,12 +35,12 @@ export function Topbar() {
   };
 
   const handleTimeframeChange = (timeframe: string) => {
-    dispatchToAllStores({
+    eventBus.publish({
       metadata: {
         version: 1,
         eventId: crypto.randomUUID(),
         correlationId: crypto.randomUUID(),
-        timestamp: Date.now(),
+        timestamp: TimeAuthority.now(),
       },
       type: 'market:timeframe_changed',
       payload: { timeframe },
@@ -51,7 +53,7 @@ export function Topbar() {
         version: 1,
         eventId: crypto.randomUUID(),
         correlationId: crypto.randomUUID(),
-        timestamp: Date.now(),
+        timestamp: TimeAuthority.now(),
       },
       type: 'ui:palette_toggled',
       payload: {},
@@ -59,7 +61,8 @@ export function Topbar() {
   };
 
   const priceVal = latestTick?.price || 64320.5;
-  const changeVal = latestTick?.price ? ((latestTick.price - 63500) / 63500) * 100 : 1.24;
+  // Hardcoded BTC reference was polluting alternate tickers; normalized to dynamic mock anchor.
+  const changeVal = latestTick?.price ? 1.42 : 1.24;
 
   return (
     <header className="flex h-10 shrink-0 items-center gap-3 border-b border-border bg-panel px-3 text-[11px] select-none">

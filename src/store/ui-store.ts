@@ -30,18 +30,5 @@ export const useUIStore = create<UIState>((set) => ({
     }
   },
 }));
-export const dispatchToAllStores = (event: IEvent) => {
-  useMarketStore.getState().dispatch(event);
-  usePortfolioStore.getState().dispatch(event);
-  useSignalStore.getState().dispatch(event);
-  useRiskStore.getState().dispatch(event);
-  useHealthStore.getState().dispatch(event);
-  useLayoutStore.getState().dispatch(event);
-  useUIStore.getState().dispatch(event);
-};
-import { useMarketStore } from './market-store';
-import { usePortfolioStore } from './portfolio-store';
-import { useSignalStore } from './signal-store';
-import { useRiskStore } from './risk-store';
-import { useHealthStore } from './health-store';
-import { useLayoutStore } from './layout-store';
+import { eventBus } from '../events/event-bus';
+eventBus.subscribe('ui:*', (event) => useUIStore.getState().dispatch(event));

@@ -8,6 +8,7 @@ import RiskPanel from '../components/terminal/RiskPanel';
 import HealthPanel from '../components/terminal/HealthPanel';
 import MetricCard from '../components/terminal/MetricCard';
 import CommandPalette from '../components/terminal/CommandPalette';
+import { MarketLayout } from '../workspaces/market/components/MarketLayout';
 import { simulationEngine } from '../services/engines/simulation-engine';
 import { usePortfolioStore } from '../store/portfolio-store';
 import { useUIStore } from '../store/ui-store';
@@ -83,7 +84,9 @@ export function TerminalWorkstation() {
 
           {activeTab === 'market' && (
             <div className="flex h-full flex-col gap-2 animate-in slide-in-from-bottom-2 fade-in duration-200">
-              <div className="flex-1 min-h-0"><ChartPanel /></div>
+              <div className="flex-1 min-h-0">
+                <MarketLayout />
+              </div>
             </div>
           )}
 

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { IEvent } from '../events/types';
+import { eventBus } from '../events/event-bus';
 
 export interface PanelConfig {
   id: string;
@@ -74,3 +75,5 @@ export const useLayoutStore = create<LayoutState>((set) => {
     },
   };
 });
+
+eventBus.subscribe('layout:*', (event) => useLayoutStore.getState().dispatch(event));

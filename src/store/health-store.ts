@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { SystemHealth } from '../types/health';
 import { IEvent } from '../events/types';
+import { eventBus } from '../events/event-bus';
 
 interface HealthState {
   health: SystemHealth;
@@ -32,3 +33,5 @@ export const useHealthStore = create<HealthState>((set) => ({
     }
   },
 }));
+
+eventBus.subscribe('health:*', (event) => useHealthStore.getState().dispatch(event));
