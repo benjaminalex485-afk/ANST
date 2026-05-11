@@ -30,4 +30,4 @@ export const useSignalStore = create<SignalState>((set) => ({
   },
 }));
 
-eventBus.subscribe('signal:*', (event) => useSignalStore.getState().dispatch(event));
+eventBus.subscribe('signal:*', (event) => useSignalStore.getState().dispatch(event), 'store:signal');

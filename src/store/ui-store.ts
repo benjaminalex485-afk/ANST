@@ -31,4 +31,4 @@ export const useUIStore = create<UIState>((set) => ({
   },
 }));
 import { eventBus } from '../events/event-bus';
-eventBus.subscribe('ui:*', (event) => useUIStore.getState().dispatch(event));
+eventBus.subscribe('ui:*', (event) => useUIStore.getState().dispatch(event), 'store:ui');

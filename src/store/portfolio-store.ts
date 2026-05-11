@@ -50,4 +50,4 @@ export const usePortfolioStore = create<PortfolioState>((set) => ({
   },
 }));
 
-eventBus.subscribe('portfolio:*', (event) => usePortfolioStore.getState().dispatch(event));
+eventBus.subscribe('portfolio:*', (event) => usePortfolioStore.getState().dispatch(event), 'store:portfolio');

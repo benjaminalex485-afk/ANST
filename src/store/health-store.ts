@@ -34,4 +34,4 @@ export const useHealthStore = create<HealthState>((set) => ({
   },
 }));
 
-eventBus.subscribe('health:*', (event) => useHealthStore.getState().dispatch(event));
+eventBus.subscribe('health:*', (event) => useHealthStore.getState().dispatch(event), 'store:health');

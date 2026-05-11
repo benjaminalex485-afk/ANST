@@ -19,7 +19,7 @@ interface MarketState {
 }
 
 export const useMarketStore = create<MarketState>((set, get) => ({
-  activeSymbol: 'AAPL',
+  activeSymbol: '',
   activeTimeframe: '1m',
   feedStatus: FeedStatus.DISCONNECTED,
   candles: {},
@@ -81,4 +81,4 @@ export const useMarketStore = create<MarketState>((set, get) => ({
 
 // ⚡️ Secure Autonomous Domain Binding
 // Binds store explicitly outside the React runtime node lifecycle, ensuring exactly-once routing invariant.
-eventBus.subscribe('market:*', (event) => useMarketStore.getState().dispatch(event));
+eventBus.subscribe('market:*', (event) => useMarketStore.getState().dispatch(event), 'store:market');

@@ -76,4 +76,4 @@ export const useLayoutStore = create<LayoutState>((set) => {
   };
 });
 
-eventBus.subscribe('layout:*', (event) => useLayoutStore.getState().dispatch(event));
+eventBus.subscribe('layout:*', (event) => useLayoutStore.getState().dispatch(event), 'store:layout');

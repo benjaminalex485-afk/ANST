@@ -75,6 +75,16 @@ export function WatchlistPanel() {
                 onClick={(e) => {
                   e.stopPropagation();
                   removeSymbol(sym);
+                  
+                  // 🛡️ Context Safety: If removing the currently active symbol, fallback to next available or clear context
+                  if (sym === activeSymbol) {
+                    const nextAvailable = pinned.find(p => p !== sym);
+                    if (nextAvailable) {
+                      handleSelect(nextAvailable);
+                    } else {
+                      handleSelect(''); // Explicit zero-state handover
+                    }
+                  }
                 }}
               >
                 <X className="w-2.5 h-2.5" />

@@ -14,7 +14,7 @@ interface WatchlistState {
 export const useWatchlistStore = create<WatchlistState>()(
   persist(
     (set) => ({
-      pinnedSymbols: ['AAPL', 'TSLA', 'NVDA', 'SPY', 'MSFT', 'QQQ', 'AMD', 'META'],
+      pinnedSymbols: [],
       
       addSymbol: (symbol) => set((state) => {
         const upper = symbol.toUpperCase();
@@ -28,6 +28,7 @@ export const useWatchlistStore = create<WatchlistState>()(
     }),
     {
       name: 'anst-watchlist-storage', // Auto persist to localstorage
+      version: 1, // Forces migration / reset of previous cached defaults
     }
   )
 );

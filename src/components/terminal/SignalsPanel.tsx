@@ -54,42 +54,7 @@ export function SignalCard({ s }: { s: AISignal }) {
 export function SignalsPanel() {
   const signals = useSignalStore((state) => state.signals);
 
-  // Fallback signals before simulation starts
-  const displaySignals: AISignal[] = signals.length > 0 ? signals : [
-    {
-      id: 's1',
-      symbol: 'BTC/USD',
-      direction: 'BUY',
-      confidence: 82,
-      riskScore: 30,
-      strategyName: 'MACD-XOver',
-      regime: 'BULLISH',
-      timestamp: Date.now(),
-      reasoning: ['MACD bullish crossover with rising volume; price reclaims 4H EMA50.'],
-    },
-    {
-      id: 's2',
-      symbol: 'ETH/USD',
-      direction: 'HOLD',
-      confidence: 54,
-      riskScore: 20,
-      strategyName: 'MeanReversion',
-      regime: 'NEUTRAL',
-      timestamp: Date.now() - 300000,
-      reasoning: ['Price within 0.6σ of mean; insufficient edge for entry.'],
-    },
-    {
-      id: 's3',
-      symbol: 'SOL/USD',
-      direction: 'SELL',
-      confidence: 71,
-      riskScore: 45,
-      strategyName: 'VolBreakdown',
-      regime: 'VOLATILE',
-      timestamp: Date.now() - 600000,
-      reasoning: ['Volatility contraction broken to downside; failed retest of prior support.'],
-    },
-  ];
+  const displaySignals = signals;
 
   return (
     <TerminalPanel
@@ -103,9 +68,16 @@ export function SignalsPanel() {
       }
     >
       <div className="flex flex-col">
-        {displaySignals.map((s) => (
-          <SignalCard key={s.id} s={s} />
-        ))}
+        {displaySignals.length === 0 ? (
+          <div className="p-6 flex flex-col items-center justify-center text-muted-foreground/40 font-mono text-[10px] select-none text-center h-[200px]">
+            <div className="mb-2 tracking-[0.2em] uppercase font-bold">Pipeline Listening</div>
+            <div>Awaiting strategy condition firing.</div>
+          </div>
+        ) : (
+          displaySignals.map((s) => (
+            <SignalCard key={s.id} s={s} />
+          ))
+        )}
       </div>
     </TerminalPanel>
   );

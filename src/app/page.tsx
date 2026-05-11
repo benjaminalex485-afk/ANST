@@ -8,22 +8,71 @@ import RiskPanel from '../components/terminal/RiskPanel';
 import HealthPanel from '../components/terminal/HealthPanel';
 import MetricCard from '../components/terminal/MetricCard';
 import CommandPalette from '../components/terminal/CommandPalette';
+import { SettingsPanel } from '../components/terminal/SettingsPanel';
 import { MarketLayout } from '../workspaces/market/components/MarketLayout';
 import { simulationEngine } from '../services/engines/simulation-engine';
 import { usePortfolioStore } from '../store/portfolio-store';
+import { useMarketStore } from '../store/market-store';
 import { useUIStore } from '../store/ui-store';
+import { useSettingsStore } from '../store/settings-store';
+import { eventBus } from '../events/event-bus';
+import { TimeAuthority } from '../services/time-authority';
+
+import { MarketFeedService } from '../workspaces/market/services/market-feed-service';
+
+import { useWatchlistStore } from '../workspaces/market/stores/watchlist-store';
+
+// 🛡️ PERSISTENT FEED ENGINE: Anchored globally to sustain continuity across logical context shifts.
+let globalFeedService: MarketFeedService | null = null;
 
 export function TerminalWorkstation() {
   const summary = usePortfolioStore((state) => state.summary);
   const activeTab = useUIStore((state) => state.activeTab);
+  const activeSymbol = useMarketStore((state) => state.activeSymbol);
+  const timeframe = useMarketStore((state) => state.activeTimeframe);
+  const pinnedSymbols = useWatchlistStore((state) => state.pinnedSymbols);
 
-  // Spin up simulated real-time pricing ticks on workstation mount
+  const enableSimulation = useSettingsStore((state) => state.enableSimulation);
+
+  // 🛸 Ignition Autopilot: On boot, if the user has a watchlist but no active symbol, auto-engage the first one.
   useEffect(() => {
-    simulationEngine.start();
+    if (!activeSymbol && pinnedSymbols.length > 0) {
+      const firstSymbol = pinnedSymbols[0];
+      console.log(`[Runtime] Cold-start detected. Automatically initializing workstation context to: ${firstSymbol}`);
+      eventBus.publish({
+        metadata: { version: 1, eventId: crypto.randomUUID(), correlationId: 'cold_start_auto_select', timestamp: TimeAuthority.now() },
+        type: 'market:symbol_changed',
+        payload: { symbol: firstSymbol }
+      });
+    }
+  }, [activeSymbol, pinnedSymbols]);
+
+  // Synchronize real-time pricing generator to global settings lifecycle
+  useEffect(() => {
+    if (enableSimulation) {
+      console.log("[Runtime] Activating background Simulation Engine...");
+      simulationEngine.start();
+    } else {
+      console.log("[Runtime] Inhibiting Simulation Engine based on user preferences.");
+      simulationEngine.stop();
+    }
     return () => {
       simulationEngine.stop();
     };
-  }, []);
+  }, [enableSimulation]);
+
+  // 🛰️ Universal Live Feed Subsystem: Listens Reactively globally, feeding all visualizers
+  useEffect(() => {
+    if (!globalFeedService) {
+      console.log("[Runtime] Bootstrapping Global MarketFeedService Transport Engine...");
+      globalFeedService = new MarketFeedService(); // Now uses smart auto-resolution for keys!
+    }
+    
+    if (activeSymbol && timeframe) {
+      console.log(`[Runtime] Universal Engine engaging stream: ${activeSymbol} @ ${timeframe}`);
+      globalFeedService.subscribeToSymbol(activeSymbol, timeframe);
+    }
+  }, [activeSymbol, timeframe]);
 
   const equityVal = summary.netAssetValue || 1000000;
   const cashVal = summary.cashBalance || 1000000;
@@ -114,8 +163,14 @@ export function TerminalWorkstation() {
             </div>
           )}
 
+          {activeTab === 'settings' && (
+            <div className="flex h-full flex-col gap-2 animate-in slide-in-from-bottom-2 fade-in duration-200">
+              <div className="flex-1 min-h-0 overflow-y-auto"><SettingsPanel /></div>
+            </div>
+          )}
+
           {/* Fallback for fully scaffolded empty placeholders (Strategy Lab, Orders, etc) */}
-          {!['dashboard', 'market', 'signals', 'portfolio', 'risk', 'health'].includes(activeTab) && (
+          {!['dashboard', 'market', 'signals', 'portfolio', 'risk', 'health', 'settings'].includes(activeTab) && (
             <div className="flex h-full flex-col items-center justify-center rounded-sm border border-border bg-panel animate-in zoom-in-95 duration-200 text-center p-8">
               <div className="h-12 w-12 rounded-full border border-border bg-background flex items-center justify-center mb-4">
                 <span className="h-2 w-2 bg-primary rounded-full animate-ping" />

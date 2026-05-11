@@ -4,6 +4,8 @@ import { NormalizedTick, Candle } from '../../../types/market';
 import { useMarketStore } from '../../../store/market-store';
 import { TimeAuthority } from '../../../services/time-authority';
 
+import { useSettingsStore } from '../../../store/settings-store';
+
 /**
  * Market Transport Infrastructure
  * Solely responsible for handling remote API data ingress.
@@ -15,8 +17,9 @@ export class MarketFeedService {
   private activeSymbol = '';
   private activeTimeframe = '';
 
-  constructor(apiKey: string = 'demo') {
-    this.apiKey = apiKey;
+  constructor(apiKey?: string) {
+    // Prioritize explicitly passed key, then settings store, fallback to runtime ENV.
+    this.apiKey = apiKey || useSettingsStore.getState().twelveDataApiKey || import.meta.env.VITE_TWELVE_DATA_API_KEY || 'demo';
   }
 
   private logStatus(status: FeedStatus) {
@@ -29,6 +32,13 @@ export class MarketFeedService {
   }
 
   public async subscribeToSymbol(symbol: string, timeframe: string) {
+    if (!symbol) {
+      this.activeSymbol = '';
+      if (this.tickInterval) clearInterval(this.tickInterval);
+      this.logStatus(FeedStatus.DISCONNECTED);
+      return;
+    }
+
     this.activeSymbol = symbol;
     this.activeTimeframe = timeframe;
     
@@ -52,17 +62,30 @@ export class MarketFeedService {
 
     try {
       // Map generic timeframe tokens to Twelve Data contract expectations
-      const tf = timeframe.toLowerCase();
-      const mappedInterval = tf === '1m' ? '1min' 
-                            : tf === '5m' ? '5min' 
-                            : tf === '15m' ? '15min' 
-                            : tf === '1h' ? '1h' 
-                            : tf === '4h' ? '4h' 
-                            : tf === '1d' ? '1day' 
-                            : tf;
+      // Map generic timeframe tokens to Twelve Data contract expectations. 
+      // Explicitly catch upper case '1M' before lowecasing!
+      const mappedInterval = timeframe === '1M' ? '1month'
+                            : timeframe.toLowerCase() === '1m' ? '1min' 
+                            : timeframe.toLowerCase() === '5m' ? '5min' 
+                            : timeframe.toLowerCase() === '15m' ? '15min' 
+                            : timeframe.toLowerCase() === '30m' ? '30min' 
+                            : timeframe.toLowerCase() === '1h' ? '1h' 
+                            : timeframe.toLowerCase() === '4h' ? '4h' 
+                            : timeframe.toLowerCase() === '1d' ? '1day' 
+                            : timeframe.toLowerCase();
 
-      const encodedSymbol = encodeURIComponent(symbol);
-      const url = `${this.baseUrl}/time_series?symbol=${encodedSymbol}&interval=${mappedInterval}&apikey=${this.apiKey}&outputsize=200`;
+      let fetchSymbol = symbol;
+      let exchangePart = '';
+      
+      // 🗺️ Global Exchange Mapping: Support 'TICKER:EXCHANGE' format (e.g., 'RELIANCE:NSE')
+      if (symbol.includes(':')) {
+        const pieces = symbol.split(':');
+        fetchSymbol = pieces[0];
+        exchangePart = `&exchange=${encodeURIComponent(pieces[1])}`;
+      }
+
+      const encodedSymbol = encodeURIComponent(fetchSymbol);
+      const url = `${this.baseUrl}/time_series?symbol=${encodedSymbol}${exchangePart}&interval=${mappedInterval}&apikey=${this.apiKey}&outputsize=200`;
       
       const res = await fetch(url);
       console.log(`[FeedService] Response HTTP Status: ${res.status} ${res.statusText}`);

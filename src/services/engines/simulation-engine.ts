@@ -43,8 +43,12 @@ class SimulationEngine {
 
     // 1. Update prices with GBM (Geometric Brownian Motion) random walk
     Object.keys(this.prices).forEach((sym) => {
+      // 🛡️ FEED COLLISION GUARD: Do not simulate ticks for the actively selected Live Market symbol.
+      // This guarantees data purity and prevents random walk injections from flickering the real dataset.
+      if (sym === activeSymbol) return;
+
       const price = this.prices[sym];
-      const changePercent = (Math.random() - 0.495) * 0.001; // slight positive bias
+      const changePercent = (Math.random() - 0.495) * 0.001; 
       const nextPrice = price * (1 + changePercent);
       this.prices[sym] = nextPrice;
 
@@ -118,29 +122,8 @@ class SimulationEngine {
       });
     }
 
-    // 3. Inject AI Signals periodically (approx every 15 ticks)
-    if (Math.random() < 0.08) {
-      const activeSymbols = Object.keys(this.prices);
-      const randomSymbol = activeSymbols[Math.floor(Math.random() * activeSymbols.length)];
-      const direction = Math.random() > 0.6 ? 'BUY' : Math.random() > 0.5 ? 'SELL' : 'HOLD';
-      const confidence = Math.floor(Math.random() * 40) + 50;
-
-      eventBus.publish({
-        metadata: { version: 1, eventId: crypto.randomUUID(), correlationId: crypto.randomUUID(), timestamp },
-        type: 'signal:generated',
-        payload: {
-          id: crypto.randomUUID(),
-          symbol: randomSymbol,
-          direction,
-          confidence,
-          riskScore: Math.floor(Math.random() * 30) + 15,
-          reasoning: [`Simulated model prediction shows momentum pivot for ${randomSymbol}.`],
-          regime: 'VOLATILE',
-          strategyName: 'GBM-Predictive',
-          timestamp,
-        },
-      });
-    }
+    // 3. [AI Signals generation deactivated]
+    // Physical strategy integration pending.
 
     // 4. Update System Health Subsystem telemetry
     eventBus.publish({

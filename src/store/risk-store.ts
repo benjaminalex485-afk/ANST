@@ -50,4 +50,4 @@ export const useRiskStore = create<RiskState>((set) => ({
   },
 }));
 
-eventBus.subscribe('risk:*', (event) => useRiskStore.getState().dispatch(event));
+eventBus.subscribe('risk:*', (event) => useRiskStore.getState().dispatch(event), 'store:risk');

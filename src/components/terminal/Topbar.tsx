@@ -7,11 +7,13 @@ import { useUIStore } from '../../store/ui-store';
 import { eventBus } from '../../events/event-bus';
 import { TimeAuthority } from '../../services/time-authority';
 import { useRuntimeStore } from '../../store/runtime-store';
+import { useWatchlistStore } from '../../workspaces/market/stores/watchlist-store';
 
-const symbols = ['BTC/USD', 'ETH/USD', 'SOL/USD', 'AAPL', 'NVDA', 'ES1!'];
-const timeframes = ['1m', '5m', '15m', '1H', '4H', '1D'];
+// Dynamic: Pulls directly from Watchlist context now.
+const timeframes = ['1m', '5m', '15m', '30m', '1h', '4h', '1D', '1M'];
 
 export function Topbar() {
+  const pinnedSymbols = useWatchlistStore((state) => state.pinnedSymbols);
   const activeSymbol = useMarketStore((state) => state.activeSymbol);
   const activeTimeframe = useMarketStore((state) => state.activeTimeframe);
   const latestTick = useMarketStore((state) => state.latestTick);
@@ -22,6 +24,7 @@ export function Topbar() {
   const runtimeState = useRuntimeStore((state) => state.state);
 
   const handleSymbolChange = (symbol: string) => {
+    if (!symbol) return;
     eventBus.publish({
       metadata: {
         version: 1,
@@ -60,9 +63,8 @@ export function Topbar() {
     });
   };
 
-  const priceVal = latestTick?.price || 64320.5;
-  // Hardcoded BTC reference was polluting alternate tickers; normalized to dynamic mock anchor.
-  const changeVal = latestTick?.price ? 1.42 : 1.24;
+  const priceVal = latestTick?.price || 0;
+  const changeVal = 0;
 
   return (
     <header className="flex h-10 shrink-0 items-center gap-3 border-b border-border bg-panel px-3 text-[11px] select-none">
@@ -71,32 +73,30 @@ export function Topbar() {
         <select
           value={activeSymbol}
           onChange={(e) => handleSymbolChange(e.target.value)}
-          className="h-7 w-[100px] rounded-sm border border-border bg-background px-1.5 font-mono text-[11px] text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+          className="h-7 w-[110px] rounded-sm border border-border bg-background px-1.5 font-mono text-[11px] text-foreground focus:outline-none focus:ring-1 focus:ring-primary/40 transition-all"
         >
-          {symbols.map((s) => (
-            <option key={s} value={s} className="font-mono text-[11px] bg-panel">
-              {s}
+          {pinnedSymbols.length === 0 ? (
+            <option value="" className="font-mono text-[11px] bg-panel text-muted-foreground">No Assets</option>
+          ) : (
+            pinnedSymbols.map((s) => (
+              <option key={s} value={s} className="font-mono text-[11px] bg-panel">
+                {s}
+              </option>
+            ))
+          )}
+        </select>
+
+        <select
+          value={activeTimeframe}
+          onChange={(e) => handleTimeframeChange(e.target.value)}
+          className="h-7 w-[60px] text-center rounded-sm border border-border bg-background px-1 font-mono text-[11px] text-foreground focus:outline-none focus:ring-1 focus:ring-primary/40 transition-all"
+        >
+          {timeframes.map((tf) => (
+            <option key={tf} value={tf} className="font-mono text-[11px] bg-panel">
+              {tf}
             </option>
           ))}
         </select>
-
-        <div className="flex h-7 items-center overflow-hidden rounded-sm border border-border bg-background">
-          {timeframes.map((tf) => {
-            const active = activeTimeframe === tf;
-            return (
-              <button
-                key={tf}
-                onClick={() => handleTimeframeChange(tf)}
-                className={cn(
-                  'h-full px-2 font-mono text-[10px] text-muted-foreground hover:bg-accent hover:text-foreground transition-colors',
-                  active && 'bg-accent text-foreground font-semibold'
-                )}
-              >
-                {tf}
-              </button>
-            );
-          })}
-        </div>
       </div>
 
       {/* CENTER */}
