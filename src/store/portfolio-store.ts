@@ -12,8 +12,8 @@ interface PortfolioState {
 
 export const usePortfolioStore = create<PortfolioState>((set) => ({
   summary: {
-    netAssetValue: 1000000,
-    cashBalance: 1000000,
+    netAssetValue: 0,
+    cashBalance: 0,
     totalUnrealizedPnL: 0,
     totalRealizedPnL: 0,
   },
@@ -35,10 +35,11 @@ export const usePortfolioStore = create<PortfolioState>((set) => ({
         set({ orders: event.payload });
         break;
       case 'portfolio:reset':
+        const initialCash = event.payload?.initialCash || 0;
         set({
           summary: {
-            netAssetValue: 1000000,
-            cashBalance: 1000000,
+            netAssetValue: initialCash,
+            cashBalance: initialCash,
             totalUnrealizedPnL: 0,
             totalRealizedPnL: 0,
           },

@@ -10,7 +10,6 @@ import MetricCard from '../components/terminal/MetricCard';
 import CommandPalette from '../components/terminal/CommandPalette';
 import { SettingsPanel } from '../components/terminal/SettingsPanel';
 import { MarketLayout } from '../workspaces/market/components/MarketLayout';
-import { simulationEngine } from '../services/engines/simulation-engine';
 import { usePortfolioStore } from '../store/portfolio-store';
 import { useMarketStore } from '../store/market-store';
 import { useUIStore } from '../store/ui-store';
@@ -47,19 +46,6 @@ export function TerminalWorkstation() {
     }
   }, [activeSymbol, pinnedSymbols]);
 
-  // Synchronize real-time pricing generator to global settings lifecycle
-  useEffect(() => {
-    if (enableSimulation) {
-      console.log("[Runtime] Activating background Simulation Engine...");
-      simulationEngine.start();
-    } else {
-      console.log("[Runtime] Inhibiting Simulation Engine based on user preferences.");
-      simulationEngine.stop();
-    }
-    return () => {
-      simulationEngine.stop();
-    };
-  }, [enableSimulation]);
 
   // 🛰️ Universal Live Feed Subsystem: Listens Reactively globally, feeding all visualizers
   useEffect(() => {
@@ -74,9 +60,11 @@ export function TerminalWorkstation() {
     }
   }, [activeSymbol, timeframe]);
 
-  const equityVal = summary.netAssetValue || 1000000;
-  const cashVal = summary.cashBalance || 1000000;
-  const pnlVal = summary.totalUnrealizedPnL || 0;
+  const equityVal = summary.netAssetValue;
+  const cashVal = summary.cashBalance;
+  const pnlVal = summary.totalUnrealizedPnL;
+  const realizedVal = summary.totalRealizedPnL;
+  const positionsCount = usePortfolioStore((state) => state.positions.length);
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground select-none">
@@ -108,12 +96,16 @@ export function TerminalWorkstation() {
                 <MetricCard
                   label="Open PnL"
                   value={`${pnlVal >= 0 ? '+' : ''}$${pnlVal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-                  delta="4 active holdings"
+                  delta={`${positionsCount} active holdings`}
                   tone={pnlVal >= 0 ? 'bull' : 'bear'}
                 />
-                <MetricCard label="Realized PnL (24h)" value="+$2,418.10" tone="bull" />
-                <MetricCard label="Win Rate (7d)" value="58.2%" delta="142 trades" tone="info" />
-                <MetricCard label="Sharpe (30d)" value="2.14" tone="info" />
+                <MetricCard 
+                  label="Realized PnL (24h)" 
+                  value={`${realizedVal >= 0 ? '+' : ''}$${realizedVal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} 
+                  tone={realizedVal >= 0 ? 'bull' : 'bear'} 
+                />
+                <MetricCard label="Win Rate (7d)" value="0.0%" delta="0 trades" tone="neutral" />
+                <MetricCard label="Sharpe (30d)" value="0.00" tone="neutral" />
               </div>
 
               {/* Main dashboard panel grid layout */}

@@ -1,24 +1,46 @@
-import { Settings, Key, Activity, Database, Save, Trash2, RefreshCw } from 'lucide-react';
+import { Settings, Key, Activity, Database, Save, Trash2, RefreshCw, Wallet, DollarSign } from 'lucide-react';
 import { useSettingsStore } from '../../store/settings-store';
 import { useState } from 'react';
 import { cn } from '../../lib/utils';
 import { TerminalPanel } from './TerminalPanel';
+import { eventBus } from '../../events/event-bus';
+import { TimeAuthority } from '../../services/time-authority';
 
 export function SettingsPanel() {
   const { 
     twelveDataApiKey, 
     setTwelveDataApiKey, 
     enableSimulation, 
-    setEnableSimulation 
+    setEnableSimulation,
+    startingCapital,
+    setStartingCapital
   } = useSettingsStore();
 
   const [keyInput, setKeyInput] = useState(twelveDataApiKey);
+  const [capitalInput, setCapitalInput] = useState(startingCapital.toString());
+  
   const [saveMessage, setSaveMessage] = useState('');
+  const [capitalMessage, setCapitalMessage] = useState('');
 
   const handleSaveKeys = () => {
     setTwelveDataApiKey(keyInput);
     setSaveMessage('Configuration saved to runtime cache.');
     setTimeout(() => setSaveMessage(''), 3000);
+  };
+
+  const handleApplyCapital = () => {
+    const val = parseFloat(capitalInput) || 0;
+    setStartingCapital(val);
+    
+    // Physically broadcast the command to the Portfolio store to wipe everything and set this value
+    eventBus.publish({
+      metadata: { version: 1, eventId: crypto.randomUUID(), correlationId: 'manual_capital_reset', timestamp: TimeAuthority.now() },
+      type: 'portfolio:reset',
+      payload: { initialCash: val }
+    });
+
+    setCapitalMessage(`Account balance effectively reset to $${val.toLocaleString()}.`);
+    setTimeout(() => setCapitalMessage(''), 4000);
   };
 
   const handleClearStorage = () => {
@@ -67,6 +89,45 @@ export function SettingsPanel() {
             {saveMessage && (
               <div className="text-[9px] font-mono text-emerald-500 animate-pulse mt-1">
                 {saveMessage}
+              </div>
+            )}
+          </div>
+        </div>
+      </TerminalPanel>
+
+      {/* 2. Account Configuration */}
+      <TerminalPanel title="Account Governance" subtitle="Operational Capital Allocation">
+        <div className="p-4 flex flex-col gap-6">
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2 text-[11px] font-mono text-foreground font-semibold">
+              <Wallet className="w-3.5 h-3.5 text-muted-foreground" />
+              Initial Cash Balance
+            </div>
+            <p className="text-[10px] text-muted-foreground -mt-1 leading-relaxed">
+              Explicit declaration of starting equity. Modifying this will purge current position data and re-anchor liquidity.
+            </p>
+            <div className="flex items-center gap-2 mt-1">
+              <div className="relative flex-1">
+                <DollarSign className="absolute left-3 top-2.5 w-3 h-3 text-muted-foreground" />
+                <input
+                  type="number"
+                  value={capitalInput}
+                  onChange={(e) => setCapitalInput(e.target.value)}
+                  className="w-full bg-background border border-border rounded-sm pl-7 pr-3 py-2 font-mono text-[11px] text-foreground focus:outline-none focus:border-primary/50 transition-colors"
+                  placeholder="100000"
+                />
+              </div>
+              <button
+                onClick={handleApplyCapital}
+                className="px-3 py-2 bg-primary/10 text-primary border border-primary/30 hover:bg-primary/20 rounded-sm font-mono text-[10px] font-bold tracking-wide uppercase flex items-center gap-2 transition-colors"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                Synchronize
+              </button>
+            </div>
+            {capitalMessage && (
+              <div className="text-[9px] font-mono text-emerald-500 animate-pulse mt-1">
+                {capitalMessage}
               </div>
             )}
           </div>
