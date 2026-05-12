@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import { Position, Order, PortfolioSummary } from '../types/portfolio';
 import { IEvent } from '../events/types';
 import { eventBus } from '../events/event-bus';
@@ -11,8 +12,10 @@ interface PortfolioState {
   adjustCash: (amount: number) => void;
 }
 
-export const usePortfolioStore = create<PortfolioState>((set) => ({
-  summary: {
+export const usePortfolioStore = create<PortfolioState>()(
+  persist(
+    (set) => ({
+      summary: {
     netAssetValue: 0,
     cashBalance: 0,
     totalUnrealizedPnL: 0,
@@ -64,6 +67,16 @@ export const usePortfolioStore = create<PortfolioState>((set) => ({
       };
     });
   }
-}));
+}),
+{
+  name: 'anst-portfolio-storage',
+  partialize: (state) => ({
+    summary: state.summary,
+    positions: state.positions,
+    orders: state.orders,
+  }),
+}
+)
+);
 
 eventBus.subscribe('portfolio:*', (event) => usePortfolioStore.getState().dispatch(event), 'store:portfolio');
