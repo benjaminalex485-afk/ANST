@@ -1,4 +1,5 @@
 import { Bell, Command, Search, User, Wifi, Zap } from 'lucide-react';
+import { useState } from 'react';
 import { cn } from '../../lib/utils';
 import { StatusBadge } from './StatusBadge';
 import { useMarketStore } from '../../store/market-store';
@@ -8,11 +9,13 @@ import { eventBus } from '../../events/event-bus';
 import { TimeAuthority } from '../../services/time-authority';
 import { useRuntimeStore } from '../../store/runtime-store';
 import { useWatchlistStore } from '../../workspaces/market/stores/watchlist-store';
+import { AccountPortal } from './AccountPortal';
 
 // Dynamic: Pulls directly from Watchlist context now.
 const timeframes = ['1m', '5m', '15m', '30m', '1h', '4h', '1D', '1M'];
 
 export function Topbar() {
+  const [isAccountOpen, setIsAccountOpen] = useState(false);
   const pinnedSymbols = useWatchlistStore((state) => state.pinnedSymbols);
   const activeSymbol = useMarketStore((state) => state.activeSymbol);
   const activeTimeframe = useMarketStore((state) => state.activeTimeframe);
@@ -146,10 +149,15 @@ export function Topbar() {
         <button className="flex h-7 w-7 items-center justify-center rounded-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
           <Bell className="h-3.5 w-3.5" />
         </button>
-        <button className="flex h-7 w-7 items-center justify-center rounded-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
+        <button 
+          onClick={() => setIsAccountOpen(true)}
+          className="flex h-7 w-7 items-center justify-center rounded-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+        >
           <User className="h-3.5 w-3.5" />
         </button>
       </div>
+      
+      <AccountPortal isOpen={isAccountOpen} onClose={() => setIsAccountOpen(false)} />
     </header>
   );
 }

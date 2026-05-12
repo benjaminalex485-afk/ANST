@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, memo } from 'react';
 import { CandlestickChart } from 'lucide-react';
 import { useMarketStore } from '../../../store/market-store';
+import { getTradingViewSymbol } from '../../../lib/tradingview';
 
 export const MarketChart = memo(() => {
   const container = useRef<HTMLDivElement>(null);
@@ -21,22 +22,6 @@ export const MarketChart = memo(() => {
     return 'D';
   };
 
-  // Smart Sanitizer: Clean format to optimize TV dynamic routing hit-rates
-  const getTVSymbol = (sym: string) => {
-    if (!sym) return 'NASDAQ:AAPL';
-    // 1. If explicitly formatted as EXCHANGE:SYMBOL, pass unmutated
-    if (sym.includes(':')) return sym;
-    // 2. Handle slash-separated pairs like BTC/USD -> BINANCE:BTCUSDT or BITSTAMP:BTCUSD
-    if (sym.includes('/')) {
-      const pair = sym.replace('/', '');
-      if (pair.startsWith('BTC') || pair.startsWith('ETH')) {
-        return `COINBASE:${pair}`;
-      }
-      return pair;
-    }
-    return sym;
-  };
-
   useEffect(() => {
     if (!activeSymbol || !container.current) return;
 
@@ -51,7 +36,7 @@ export const MarketChart = memo(() => {
     // Massive Payload Constructor for the Pro Engine configuration
     script.innerHTML = JSON.stringify({
       "autosize": true,
-      "symbol": getTVSymbol(activeSymbol),
+      "symbol": getTradingViewSymbol(activeSymbol),
       "interval": getTVInterval(timeframe),
       "timezone": "Etc/UTC",
       "theme": "dark",

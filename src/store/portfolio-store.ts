@@ -8,6 +8,7 @@ interface PortfolioState {
   positions: Position[];
   orders: Order[];
   dispatch: (event: IEvent) => void;
+  adjustCash: (amount: number) => void;
 }
 
 export const usePortfolioStore = create<PortfolioState>((set) => ({
@@ -49,6 +50,20 @@ export const usePortfolioStore = create<PortfolioState>((set) => ({
         break;
     }
   },
+
+  adjustCash: (amount: number) => {
+    set((state) => {
+      const newCash = Math.max(0, state.summary.cashBalance + amount);
+      // Recalc NAV (Cash + sum of unrealized/realized/position values usually, but keep it simple for now)
+      return {
+        summary: {
+          ...state.summary,
+          cashBalance: newCash,
+          netAssetValue: state.summary.netAssetValue + amount // Simple scalar adjustment
+        }
+      };
+    });
+  }
 }));
 
 eventBus.subscribe('portfolio:*', (event) => usePortfolioStore.getState().dispatch(event), 'store:portfolio');

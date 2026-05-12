@@ -5,6 +5,8 @@ import { useMarketStore } from '../../../store/market-store';
 import { StatusBadge } from '../../../components/terminal/StatusBadge';
 import { Activity, Wifi } from 'lucide-react';
 
+import { ResearchSidebar } from './ResearchSidebar';
+
 export function MarketLayout() {
   const feedStatus = useMarketStore(state => state.feedStatus);
 
@@ -30,14 +32,19 @@ export function MarketLayout() {
 
       {/* Core Split Layout */}
       <div className="flex-1 flex min-h-0 gap-2">
-        {/* Column A: Operations Sidecar */}
+        {/* Column A: Operations Sidecar (Watchlist) */}
         <div className="w-56 flex flex-col gap-2 shrink-0 min-h-0">
           <WatchlistPanel />
         </div>
 
-        {/* Column B: Heavyweight Workspace Canvas */}
+        {/* Column B: Heavyweight Workspace Canvas (Chart) */}
         <div className="flex-1 flex flex-col min-w-0 border border-border rounded-sm overflow-hidden bg-panel">
           <MarketChart />
+        </div>
+
+        {/* Column C: Deep Intelligence Research Hub (Fundamentals / News) */}
+        <div className="w-80 xl:w-96 flex flex-col gap-2 shrink-0 min-h-0">
+          <ResearchSidebar />
         </div>
       </div>
     </div>
